@@ -6,7 +6,7 @@
   <node name="ydlidar_node"  pkg="ydlidar"  type="ydlidar_node" output="screen" respawn="true">
     <param name="port"         type="string" value="/dev/ydlidar"/>
     <param name="baudrate"     type="int"    value="115200"/>
-    <param name="frame_id"     type="string" value="/$(arg tf_prefix)/laser_link"/>
+    <param name="frame_id"     type="string" value="$(arg tf_prefix)/laser_link"/>
     <param name="angle_fixed"  type="bool"   value="true"/>
     <param name="low_exposure"  type="bool"   value="false"/>
     <param name="heartbeat"    type="bool"   value="false"/>
