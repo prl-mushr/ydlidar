@@ -355,7 +355,7 @@ int main(int argc, char * argv[]) {
     nh_private.param<double>("range_max", max_range , 16.0);
     nh_private.param<double>("range_min", min_range , 0.08);
     nh_private.param<double>("frequency", _frequency , 7.0);
-    nh_private.param<double>("range_error", range_error, 0.0);
+    nh_private.param<double>("range_error", range_error, 0.0); // usually only need to tweak this value to fix lidar error
     nh_private.param<double>("range_at_error", range_at_error, 4.0);
     nh_private.param<double>("baseline", baseline, 0.035);
     nh_private.param<std::string>("ignore_array",list,"");
