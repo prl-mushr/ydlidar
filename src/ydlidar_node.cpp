@@ -28,7 +28,7 @@ static float each_angle = 0.5;
 int type = 0;
 int print = 0;
 
-void publish_scan(ros::Publisher *pub,  node_info *nodes,  size_t node_count, ros::Time start, double scan_time, float angle_min, float angle_max, std::string frame_id, std::vector<double> ignore_array, double min_range , double max_range)
+void publish_scan(ros::Publisher *pub,  node_info *nodes,  size_t node_count, ros::Time start, double scan_time, float angle_min, float angle_max, std::string frame_id, std::vector<double> ignore_array, double min_range , double max_range, double correction_factor, double baseline)
 {
     sensor_msgs::LaserScan scan_msg;
 
@@ -43,8 +43,13 @@ void publish_scan(ros::Publisher *pub,  node_info *nodes,  size_t node_count, ro
     float intensity = 0.0;
     int index = 0;
 
+    double baseline2 = baseline*baseline;
+    float dR = 0;
+
     for (size_t i = 0; i < node_count; i++) {
 	    range = (float)nodes[i].distance_q2/4.0f/1000;
+        dR = float((baseline2 + (range*range))*correction_factor);
+        range += dR;
 	    intensity = (float)(nodes[i].sync_quality >> 2);
 
         if(i<node_count/2){
@@ -332,6 +337,7 @@ int main(int argc, char * argv[]) {
     std::vector<double> ignore_array;  
     double max_range , min_range;
     double _frequency;
+    double range_error, range_at_error, baseline;
 
     ros::NodeHandle nh;
     ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1000);
@@ -349,9 +355,14 @@ int main(int argc, char * argv[]) {
     nh_private.param<double>("range_max", max_range , 16.0);
     nh_private.param<double>("range_min", min_range , 0.08);
     nh_private.param<double>("frequency", _frequency , 7.0);
+    nh_private.param<double>("range_error", range_error, 0.0);
+    nh_private.param<double>("range_at_error", range_at_error, 4.0);
+    nh_private.param<double>("baseline", baseline, 0.035);
     nh_private.param<std::string>("ignore_array",list,"");
     ignore_array = split(list ,',');
     reversion = false;
+
+    double correction_factor = -range_error/((baseline*baseline) + (range_at_error*range_at_error));
 
     if(ignore_array.size()%2){
         ROS_ERROR_STREAM("ignore array is odd need be even");
@@ -586,7 +597,7 @@ again:
                         end_scan_time.nsec = end_time%1000000000ul;
                         scan_duration = (end_scan_time - start_scan_time).toSec();
 
-                        publish_scan(&scan_pub, all_nodes, max_nodes_count, start_scan_time, scan_duration, angle_min, angle_max, frame_id, ignore_array, min_range , max_range);
+                        publish_scan(&scan_pub, all_nodes, max_nodes_count, start_scan_time, scan_duration, angle_min, angle_max, frame_id, ignore_array, min_range , max_range, correction_factor, baseline);
                     } else {
                         int start_node = 0, end_node = 0;
                         int i = 0;
@@ -599,7 +610,7 @@ again:
                         angle_min = (float)(nodes[start_node].angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
                         angle_max = (float)(nodes[end_node].angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
 
-                        publish_scan(&scan_pub, &nodes[start_node], end_node-start_node +1,  start_scan_time, scan_duration, angle_min, angle_max, frame_id, ignore_array, min_range , max_range);
+                        publish_scan(&scan_pub, &nodes[start_node], end_node-start_node +1,  start_scan_time, scan_duration, angle_min, angle_max, frame_id, ignore_array, min_range , max_range, correction_factor, baseline);
                    }
                 }
             }

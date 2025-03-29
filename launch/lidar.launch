@@ -18,6 +18,10 @@
     <param name="ignore_array" type="string" value="" />
     <param name="samp_rate"    type="int"    value="9"/>
     <param name="frequency"    type="double" value="7"/>
+    <!-- parameter to tweak: range_error (usually in [-0.25, 0.25] for range_at_error ~ 4) -->
+    <param name="range_error"  type="double" value="0.2"/>
+    <param name="range_at_error" type="double" value="4.0"/>
+    <param name="baseline"     type="double" value="0.035"/> 
   </node>
 
 <!--
